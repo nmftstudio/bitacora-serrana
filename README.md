@@ -68,8 +68,8 @@ Todo vive en un único `<script>` al final del archivo, organizado en bloques co
 
 ## Ideas para una v3 (si en algún momento querés seguir)
 
-- **Incendios/alertas en vivo**: existe NASA FIRMS (focos de calor por satélite), pero pide una API key gratuita y no es un fetch directo — queda pendiente si te interesa sumarlo.
-- **Fechas hiperlocales** (fundación del pueblo, aniversarios puntuales de Villa Ciudad Parque): no las cargué porque no tenía una fuente confiable — se agregan a mano con el botón **+**, o me pasás la fecha y la sumo al calendario fijo.
+- **Incendios/alertas en vivo**: existe NASA FIRMS (focos de calor por satélite), pero pide una API key gratuita y no es un fetch directo — queda pendiente.
+- **Fechas hiperlocales** (fundación del pueblo, aniversarios puntuales de Villa Ciudad Parque): no las cargué porque no tenía una fuente confiable — se agregan a mano con el botón **+**
 - Un modo "compartir vista" que guarde el rumbo actual en la URL.
 
 ---
