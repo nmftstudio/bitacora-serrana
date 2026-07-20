@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bitácora Serrana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0d0e16;
+    --dusk:#362f52;
+    --gold:#d9a04b;
+    --teal:#4fb8ac;
+    --ember:#ff6fa8;
+    --parchment:#f1ece2;
+    --panel-bg: rgba(13,14,22,0.62);
+    --panel-border: rgba(241,236,226,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--night);overflow:hidden;font-family:'Inter',sans-serif;}
+  #app{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;}
+
+  /* ---------- ESCENA ---------- */
+  #sky{position:absolute;inset:0;transition:background 3s linear;}
+  #stars{position:absolute;inset:0;pointer-events:none;}
+  .star{position:absolute;border-radius:50%;background:var(--parchment);animation:twinkle 4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.85}}
+
+  #celestial{position:absolute;width:52px;height:52px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);transition:opacity 1.5s linear;}
+  #fx{position:absolute;inset:0;pointer-events:none;}
+
+  .cloud{position:absolute;border-radius:50%;background:rgba(241,236,226,0.5);filter:blur(14px);pointer-events:none;}
+  .fogband{position:absolute;left:-20%;width:140%;height:120px;background:linear-gradient(90deg, transparent, rgba(241,236,226,0.18), transparent);pointer-events:none;animation:drift 40s linear infinite;}
+  @keyframes drift{from{transform:translateX(-10%)}to{transform:translateX(10%)}}
+
+  .critter{position:absolute;width:5px;height:5px;border-radius:50%;pointer-events:none;}
+
+  #ridges{position:absolute;bottom:0;left:0;width:100%;height:56%;}
+  #ridges svg{width:100%;height:100%;display:block;}
+
+  /* ---------- HUD ---------- */
+  #hud{position:absolute;top:0;left:0;padding:20px 22px;color:var(--parchment);pointer-events:none;user-select:none;}
+  .hud-date{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(20px,3vw,30px);letter-spacing:.3px;text-transform:capitalize;}
+  .hud-time{font-family:'JetBrains Mono',monospace;font-size:clamp(12px,1.6vw,14px);opacity:.85;margin-top:2px;}
+  .hud-row{display:flex;gap:14px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:clamp(11px,1.4vw,13px);opacity:.9;flex-wrap:wrap;}
+  .hud-chip{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:20px;padding:4px 12px;backdrop-filter:blur(6px);}
+
+  #place{position:absolute;top:20px;right:22px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--parchment);opacity:.55;pointer-events:none;line-height:1.5;}
+
+  /* ---------- PLACA INFERIOR ---------- */
+  #placard{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(640px,92vw);background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:16px;padding:14px 18px;backdrop-filter:blur(10px);color:var(--parchment);}
+  .placard-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;opacity:.55;display:flex;justify-content:space-between;align-items:center;}
+  #placardList{margin-top:8px;font-family:'Fraunces',serif;font-size:clamp(14px,2vw,17px);line-height:1.5;}
+  #placardList div{display:flex;gap:8px;align-items:baseline;}
+  #placardList div::before{content:'·';color:var(--ember);font-size:18px;line-height:1;}
+  #addBtn{background:none;border:1px solid var(--panel-border);color:var(--parchment);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:1;pointer-events:all;display:flex;align-items:center;justify-content:center;opacity:.7;}
+  #addBtn:hover{opacity:1;border-color:var(--teal);}
+
+  /* ---------- PANEL VISITAS ESPECIALES ---------- */
+  #addPanel{position:absolute;inset:0;background:rgba(13,14,22,0.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:20;}
+  #addPanel[hidden]{display:none;}
+  #addPanelInner{background:#151726;border:1px solid var(--panel-border);border-radius:18px;padding:22px;width:min(360px,90vw);color:var(--parchment);font-family:'Inter',sans-serif;}
+  #addPanelInner h3{font-family:'Fraunces',serif;font-weight:500;margin:0 0 14px;font-size:19px;}
+  #addPanelInner label{display:block;font-size:12px;opacity:.7;margin:12px 0 5px;}
+  #addPanelInner input[type=text],#addPanelInner input[type=date]{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--panel-border);background:#0d0e16;color:var(--parchment);font-family:'Inter',sans-serif;font-size:14px;}
+  #addPanelInner .checkrow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;opacity:.85;}
+  #addPanelInner .btnrow{display:flex;gap:8px;margin-top:18px;}
+  #addPanelInner button{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;}
+  #saveAdd{background:var(--teal);color:#0d0e16;}
+  #cancelAdd{background:transparent;border:1px solid var(--panel-border) !important;color:var(--parchment);}
+  #visitasList{margin-top:16px;max-height:140px;overflow-y:auto;}
+  .visita-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--panel-border);}
+  .visita-item button{background:none;border:none;color:var(--ember);cursor:pointer;font-size:13px;padding:0 4px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .star,.fogband,.critter{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sky"></div>
+  <div id="stars"></div>
+  <div id="fx"></div>
+  <div id="celestial"></div>
+  <div id="ridges">
+    <svg viewBox="0 0 1440 400" preserveAspectRatio="none">
+      <path id="ridgeFar" d="M0,300 L80,240 160,270 260,200 360,250 460,180 560,230 680,190 780,240 880,200 1000,250 1100,210 1220,260 1320,220 1440,260 L1440,400 L0,400 Z"/>
+      <path id="ridgeMid" d="M0,340 L100,280 220,320 340,260 460,310 580,270 700,320 820,280 940,330 1060,290 1180,330 1300,300 1440,330 L1440,400 L0,400 Z"/>
+      <path id="ridgeNear" d="M0,380 L120,320 260,360 380,300 520,350 640,300 780,340 900,300 1040,350 1180,310 1320,350 1440,320 L1440,400 L0,400 Z"/>
+    </svg>
+  </div>
+
+  <div id="hud">
+    <div class="hud-date" id="hudDate">—</div>
+    <div class="hud-time" id="hudTime">—</div>
+    <div class="hud-row">
+      <span class="hud-chip" id="hudWeather">clima —</span>
+      <span class="hud-chip" id="hudMoon">luna —</span>
+      <span class="hud-chip" id="hudSun">sol —</span>
+    </div>
+  </div>
+
+  <div id="place">VILLA CIUDAD PARQUE<br>CALAMUCHITA · CÓRDOBA<br>31.91° S · 64.53° O</div>
+
+  <div id="placard">
+    <div class="placard-label"><span>HOY EN LA SIERRA</span><button id="addBtn" title="Agregar visita especial">+</button></div>
+    <div id="placardList"></div>
+  </div>
+
+  <div id="addPanel" hidden>
+    <div id="addPanelInner">
+      <h3>Visita especial</h3>
+      <label for="addTitle">Qué pasa</label>
+      <input type="text" id="addTitle" placeholder="Ej: viene el Rulo a arreglar el techo">
+      <label for="addDate">Fecha</label>
+      <input type="date" id="addDate">
+      <div class="checkrow"><input type="checkbox" id="addRepeat"><label for="addRepeat" style="margin:0;">se repite cada año</label></div>
+      <div class="btnrow">
+        <button id="cancelAdd">Cerrar</button>
+        <button id="saveAdd">Guardar</button>
+      </div>
+      <div id="visitasList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================
+     UBICACIÓN — Villa Ciudad Parque, Calamuchita, Córdoba
+     ===================================================== */
+  const LAT = -31.9124, LON = -64.5288;
+
+  /* =====================================================
+     ASTRONOMÍA — posición solar real (fórmulas estándar
+     de baja precisión, suficientes para uso ambiental)
+     ===================================================== */
+  const RAD = Math.PI/180;
+  const DAY_MS = 86400000, J1970 = 2440588, J2000 = 2451545;
+
+  function toDays(date){ return (date.valueOf()/DAY_MS - 0.5 + J1970) - J2000; }
+  function solarMeanAnomaly(d){ return RAD*(357.5291 + 0.98560028*d); }
+  function eclipticLongitude(M){
+    const C = RAD*(1.9148*Math.sin(M) + 0.02*Math.sin(2*M) + 0.0003*Math.sin(3*M));
+    const P = RAD*102.9372;
+    return M + C + P + Math.PI;
+  }
+  const OBLIQUITY = RAD*23.4397;
+  function declination(L){ return Math.asin(Math.sin(OBLIQUITY)*Math.sin(L)); }
+  function siderealTime(d, lw){ return RAD*(280.16 + 360.9856235*d) - lw; }
+  function hourAngleFrom(siderealT, L){
+    // aproximación de ascensión recta directa desde la longitud eclíptica
+    const ra = Math.atan2(Math.sin(L)*Math.cos(OBLIQUITY), Math.cos(L));
+    return siderealT - ra;
+  }
+  function altitude(H, phi, dec){
+    return Math.asin(Math.sin(phi)*Math.sin(dec) + Math.cos(phi)*Math.cos(dec)*Math.cos(H));
+  }
+
+  function sunState(date){
+    const lw = RAD*-LON, phi = RAD*LAT, d = toDays(date);
+    const M = solarMeanAnomaly(d), L = eclipticLongitude(M);
+    const dec = declination(L);
+    const st = siderealTime(d, lw);
+    const H = hourAngleFrom(st, L);
+    const alt = altitude(H, phi, dec);
+    const altTransit = altitude(0, phi, dec); // altura máxima teórica del día (mediodía solar)
+    // envolver H a [-PI, PI]
+    let Hw = ((H + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
+    return { altitude: alt, hourAngle: Hw, transitAltitude: altTransit, dec: dec };
+  }
+
+  /* =====================================================
+     FASE LUNAR — ciclo sinódico real, posición aproximada
+     desfasada respecto del sol según la edad de la luna
+     ===================================================== */
+  const SYNODIC = 29.530588853;
+  const KNOWN_NEW_MOON = Date.UTC(2000,0,6,18,14,0);
+
+  function moonState(date, sun){
+    const daysSince = (date.getTime() - KNOWN_NEW_MOON)/DAY_MS;
+    let age = daysSince % SYNODIC; if(age < 0) age += SYNODIC;
+    const fraction = age/SYNODIC;
+    const illumination = (1 - Math.cos(2*Math.PI*fraction))/2;
+    let name, emoji;
+    if(fraction < 0.03 || fraction > 0.97){ name='Luna nueva'; emoji='🌑'; }
+    else if(fraction < 0.22){ name='Creciente'; emoji='🌒'; }
+    else if(fraction < 0.28){ name='Cuarto creciente'; emoji='🌓'; }
+    else if(fraction < 0.47){ name='Gibosa creciente'; emoji='🌔'; }
+    else if(fraction < 0.53){ name='Luna llena'; emoji='🌕'; }
+    else if(fraction < 0.72){ name='Gibosa menguante'; emoji='🌖'; }
+    else if(fraction < 0.78){ name='Cuarto menguante'; emoji='🌗'; }
+    else { name='Menguante'; emoji='🌘'; }
+
+    // el tránsito lunar se desfasa respecto al solar según la edad (aprox. estándar)
+    const offset = fraction*2*Math.PI;
+    let Hm = sun.hourAngle - offset;
+    Hm = ((Hm + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
+    const phi = RAD*LAT;
+    const altM = altitude(Hm, phi, sun.dec);
+
+    return { age, fraction, illumination, name, emoji, hourAngle: Hm, altitude: altM };
+  }
+
+  /* =====================================================
+     CIELO — degradé continuo según altura solar real
+     ===================================================== */
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function lerpColor(c1,c2,t){
+    const p = h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+    const a=p(c1), b=p(c2);
+    const r = a.map((v,i)=>Math.round(lerp(v,b[i],t)));
+    return `rgb(${r[0]},${r[1]},${r[2]})`;
+  }
+  const SKY_NIGHT_TOP='#05060b', SKY_NIGHT_BOT='#171a2b';
+  const SKY_TWI_TOP='#2b2447', SKY_TWI_BOT='#a8623f';
+  const SKY_DAY_TOP='#3d7396', SKY_DAY_BOT='#9fc9c3';
+
+  function paintSky(altDeg){
+    let top, bot;
+    if(altDeg <= -12){ top=SKY_NIGHT_TOP; bot=SKY_NIGHT_BOT; }
+    else if(altDeg <= 0){
+      const t = (altDeg+12)/12;
+      top = lerpColor(SKY_NIGHT_TOP, SKY_TWI_TOP, t);
+      bot = lerpColor(SKY_NIGHT_BOT, SKY_TWI_BOT, t);
+    } else if(altDeg <= 8){
+      const t = altDeg/8;
+      top = lerpColor(SKY_TWI_TOP, SKY_DAY_TOP, t);
+      bot = lerpColor(SKY_TWI_BOT, SKY_DAY_BOT, t);
+    } else { top = SKY_DAY_TOP; bot = SKY_DAY_BOT; }
+    document.getElementById('sky').style.background = `linear-gradient(180deg, ${top} 0%, ${bot} 100%)`;
+    return altDeg > 0 ? Math.min(1,altDeg/8) : 0; // "brillo diurno" 0-1 para opacar estrellas/luna
+  }
+
+  /* =====================================================
+     ESTRELLAS
+     ===================================================== */
+  const starsEl = document.getElementById('stars');
+  const STAR_COUNT = 90;
+  for(let i=0;i<STAR_COUNT;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const size = Math.random()*1.6+0.6;
+    s.style.width=s.style.height=size+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.top=(Math.random()*62)+'%';
+    s.style.animationDelay=(Math.random()*4)+'s';
+    starsEl.appendChild(s);
+  }
+
+  /* =====================================================
+     SOL / LUNA en pantalla
+     ===================================================== */
+  const celestial = document.getElementById('celestial');
+  function placeCelestial(sun, moon, dayBrightness){
+    const scene = document.getElementById('app').getBoundingClientRect();
+    const w = scene.width, h = scene.height;
+    const topPad = h*0.08, arcH = h*0.42;
+    const maxAlt = sun.transitAltitude; // rad
+
+    const sunUp = sun.altitude > -0.03;
+    const moonUp = moon.altitude > -0.03;
+
+    if(sunUp){
+      const nx = Math.max(-1,Math.min(1, sun.hourAngle/Math.PI));
+      const x = w*0.5 + nx*w*0.44;
+      const nAlt = Math.max(0, Math.min(1, sun.altitude/maxAlt));
+      const y = topPad + (1-nAlt)*arcH;
+      celestial.style.left = x+'px';
+      celestial.style.top = y+'px';
+      celestial.style.opacity = '1';
+      celestial.style.background = 'radial-gradient(circle, #fff4d8 0%, #d9a04b 45%, rgba(217,160,75,0) 75%)';
+      celestial.style.boxShadow = '0 0 60px 18px rgba(217,160,75,0.55)';
+    } else if(moonUp){
+      const nx = Math.max(-1,Math.min(1, moon.hourAngle/Math.PI));
+      const x = w*0.5 + nx*w*0.44;
+      const nAlt = Math.max(0, Math.min(1, moon.altitude/maxAlt));
+      const y = topPad + (1-nAlt)*arcH;
+      const glow = 0.25 + moon.illumination*0.65;
+      celestial.style.left = x+'px';
+      celestial.style.top = y+'px';
+      celestial.style.opacity = String(Math.max(0.15, glow*(1-dayBrightness*0.6)));
+      celestial.style.background = 'radial-gradient(circle, #eef7f5 0%, #4fb8ac 50%, rgba(79,184,172,0) 75%)';
+      celestial.style.boxShadow = '0 0 40px 12px rgba(79,184,172,0.4)';
+    } else {
+      celestial.style.opacity = '0';
+    }
+  }
+
+  /* =====================================================
+     CLIMA REAL — Open-Meteo (sin API key)
+     ===================================================== */
+  const WMO = {
+    0:{label:'despejado',cat:'clear'}, 1:{label:'poco nublado',cat:'clear'},
+    2:{label:'parcialmente nublado',cat:'cloudy'}, 3:{label:'nublado',cat:'cloudy'},
+    45:{label:'niebla',cat:'fog'}, 48:{label:'niebla helada',cat:'fog'},
+    51:{label:'llovizna leve',cat:'rain'}, 53:{label:'llovizna',cat:'rain'}, 55:{label:'llovizna densa',cat:'rain'},
+    61:{label:'lluvia leve',cat:'rain'}, 63:{label:'lluvia',cat:'rain'}, 65:{label:'lluvia fuerte',cat:'rain'},
+    66:{label:'lluvia helada',cat:'rain'}, 67:{label:'lluvia helada fuerte',cat:'rain'},
+    71:{label:'nieve leve',cat:'snow'}, 73:{label:'nieve',cat:'snow'}, 75:{label:'nieve fuerte',cat:'snow'}, 77:{label:'granizo fino',cat:'snow'},
+    80:{label:'chubascos',cat:'rain'}, 81:{label:'chubascos',cat:'rain'}, 82:{label:'chubascos fuertes',cat:'rain'},
+    85:{label:'chubascos de nieve',cat:'snow'}, 86:{label:'chubascos de nieve fuertes',cat:'snow'},
+    95:{label:'tormenta',cat:'storm'}, 96:{label:'tormenta con granizo',cat:'storm'}, 99:{label:'tormenta fuerte',cat:'storm'}
+  };
+  let weather = { temperature:null, category:'clear', label:'—' };
+
+  async function fetchWeather(){
+    try{
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const cw = data.current_weather;
+      const info = WMO[cw.weathercode] || {label:'—',cat:'clear'};
+      weather = { temperature: Math.round(cw.temperature), category: info.cat, label: info.label };
+    }catch(e){
+      weather = { temperature:null, category:'clear', label:'sin datos' };
+    }
+    document.getElementById('hudWeather').textContent =
+      (weather.temperature!==null ? weather.temperature+'°C · ' : '') + weather.label;
+    rebuildWeatherFX();
+  }
+
+  /* =====================================================
+     EFECTOS DE CLIMA — nubes, niebla, lluvia/nieve, bichos
+     ===================================================== */
+  const fx = document.getElementById('fx');
+  let ctx = null, particles = [], rafId = null;
+  function ensureCanvas(){
+    if(!(fx.tagName==='CANVAS')){
+      // fx es un div contenedor; el canvas real vive aparte
+    }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.style.position='absolute'; canvas.style.inset='0';
+  fx.appendChild(canvas);
+  ctx = canvas.getContext('2d');
+  function resizeCanvas(){
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function rebuildWeatherFX(){
+    // limpiar decorativos previos (nubes, niebla, criaturas)
+    document.querySelectorAll('.cloud,.fogband,.critter').forEach(n=>n.remove());
+    particles = [];
+
+    if(weather.category==='cloudy' || weather.category==='rain' || weather.category==='storm'){
+      const n = weather.category==='cloudy' ? 5 : 8;
+      for(let i=0;i<n;i++){
+        const c = document.createElement('div');
+        c.className='cloud';
+        const w_ = 90+Math.random()*140, h_ = w_*0.4;
+        c.style.width=w_+'px'; c.style.height=h_+'px';
+        c.style.left=(Math.random()*100)+'%';
+        c.style.top=(8+Math.random()*20)+'%';
+        c.style.animation=`drift ${30+Math.random()*30}s linear infinite`;
+        fx.parentNode.insertBefore(c, fx);
+        c.dataset.decor='1';
+      }
+    }
+    if(weather.category==='fog'){
+      for(let i=0;i<4;i++){
+        const f = document.createElement('div');
+        f.className='fogband';
+        f.style.top=(50+i*10)+'%';
+        f.style.animationDuration=(35+i*8)+'s';
+        fx.parentNode.insertBefore(f, fx);
+      }
+    }
+    if(weather.category==='rain' || weather.category==='storm'){
+      for(let i=0;i<140;i++) particles.push({type:'rain', x:Math.random()*canvas.width, y:Math.random()*canvas.height, spd:6+Math.random()*6, len:10+Math.random()*8});
+    }
+    if(weather.category==='snow'){
+      for(let i=0;i<90;i++) particles.push({type:'snow', x:Math.random()*canvas.width, y:Math.random()*canvas.height, spd:0.6+Math.random()*1.2, drift:Math.random()*2-1, r:1.5+Math.random()*2});
+    }
+    if(weather.category==='clear'){
+      const n = 6;
+      for(let i=0;i<n;i++){
+        const cr = document.createElement('div');
+        cr.className='critter';
+        cr.style.left=(Math.random()*90+5)+'%';
+        cr.style.top=(Math.random()*50+15)+'%';
+        cr.style.animation=`drift ${8+Math.random()*10}s ease-in-out infinite alternate`;
+        cr.dataset.critter='1';
+        fx.parentNode.insertBefore(cr, fx);
+      }
+    }
+  }
+
+  function tickFX(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const p of particles){
+      if(p.type==='rain'){
+        ctx.strokeStyle='rgba(200,220,230,0.45)';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(p.x,p.y);
+        ctx.lineTo(p.x-2,p.y+p.len);
+        ctx.stroke();
+        p.y += p.spd; p.x -= 0.6;
+        if(p.y>canvas.height){ p.y=-10; p.x=Math.random()*canvas.width; }
+      } else if(p.type==='snow'){
+        ctx.fillStyle='rgba(241,236,226,0.85)';
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+        p.y += p.spd; p.x += p.drift*0.3;
+        if(p.y>canvas.height){ p.y=-6; p.x=Math.random()*canvas.width; }
+      }
+    }
+    rafId = requestAnimationFrame(tickFX);
+  }
+
+  /* =====================================================
+     CALENDARIO LOCAL — feriados, fiestas, efemérides
+     ===================================================== */
+  const FERIADOS_2026 = [
+    {date:'2026-01-01', label:'Año Nuevo'},
+    {date:'2026-02-16', label:'Carnaval'},
+    {date:'2026-02-17', label:'Carnaval'},
+    {date:'2026-03-23', label:'Día no laborable (puente turístico)'},
+    {date:'2026-03-24', label:'Día de la Memoria por la Verdad y la Justicia'},
+    {date:'2026-04-02', label:'Día del Veterano y los Caídos en Malvinas'},
+    {date:'2026-04-03', label:'Viernes Santo'},
+    {date:'2026-05-01', label:'Día del Trabajador'},
+    {date:'2026-05-25', label:'Día de la Revolución de Mayo'},
+    {date:'2026-06-15', label:'Paso a la Inmortalidad del Gral. Güemes'},
+    {date:'2026-06-20', label:'Día de la Bandera'},
+    {date:'2026-07-09', label:'Día de la Independencia'},
+    {date:'2026-07-10', label:'Día no laborable (puente turístico)'},
+    {date:'2026-08-17', label:'Paso a la Inmortalidad del Gral. San Martín'},
+    {date:'2026-10-12', label:'Día del Respeto a la Diversidad Cultural'},
+    {date:'2026-11-23', label:'Día de la Soberanía Nacional'},
+    {date:'2026-12-07', label:'Día no laborable (puente turístico)'},
+    {date:'2026-12-08', label:'Inmaculada Concepción de María'},
+    {date:'2026-12-25', label:'Navidad'}
+  ];
+
+  // fiestas del Valle de Calamuchita — algunas con fecha 2026 confirmada,
+  // otras marcadas solo por mes porque la fecha exacta varía año a año
+  const FIESTAS_CALAMUCHITA = [
+    {type:'range', start:'2026-04-02', end:'2026-04-05', label:'Fiesta Nacional de la Masa Vienesa · Villa General Belgrano'},
+    {type:'month', month:1, label:'Sommerfest y noches de verano · Villa General Belgrano'},
+    {type:'month', month:7, label:'Fiesta del Chocolate Alpino · Valle de Calamuchita'},
+    {type:'month', month:10, label:'Oktoberfest — Fiesta Nacional de la Cerveza · Villa General Belgrano'},
+    {type:'month', month:12, label:'Feria Navideña · Villa General Belgrano'}
+  ];
+
+  const EFEMERIDES = [
+    {date:'01-24', label:'Día Internacional de la Educación'},
+    {date:'03-21', label:'Día Mundial de la Poesía'},
+    {date:'04-22', label:'Día Internacional de la Madre Tierra'},
+    {date:'06-05', label:'Día Mundial del Medio Ambiente'},
+    {date:'08-12', label:'Día Internacional de la Juventud'},
+    {date:'09-21', label:'Día del Estudiante y de la Primavera'},
+    {date:'09-27', label:'Día Mundial del Turismo'},
+    {date:'10-04', label:'Día Mundial de los Animales'},
+    {date:'11-10', label:'Día de la Tradición'}
+  ];
+
+  const AMBIENTE = {
+    clear_day: ['Cielo despejado sobre el valle.', 'Buena visibilidad hacia las sierras.'],
+    clear_night: ['Noche clara, buena para mirar las estrellas.', 'Cielo despejado, se ve bien la luna.'],
+    cloudy: ['Nubes bajas sobre las lomas.', 'Cielo cubierto en el valle.'],
+    rain: ['Lluvia sobre la sierra.', 'Agua cayendo en el Valle de Calamuchita.'],
+    fog: ['Niebla en el valle esta mañana.', 'Bruma cubriendo las lomas.'],
+    snow: ['Nieve en las sierras — poco común, aprovechala.'],
+    storm: ['Tormenta sobre el valle.']
+  };
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function md(d){ return `${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+  function loadVisitas(){
+    try{ return JSON.parse(localStorage.getItem('bitacora_visitas')||'[]'); }
+    catch(e){ return []; }
+  }
+  function saveVisitas(list){
+    try{ localStorage.setItem('bitacora_visitas', JSON.stringify(list)); }catch(e){}
+  }
+
+  function buildPlacard(now, sun){
+    const items = [];
+    const todayYmd = ymd(now), todayMd = md(now);
+
+    const feriado = FERIADOS_2026.find(f=>f.date===todayYmd);
+    if(feriado) items.push('Feriado: '+feriado.label);
+
+    for(const f of FIESTAS_CALAMUCHITA){
+      if(f.type==='range' && todayYmd>=f.start && todayYmd<=f.end) items.push(f.label);
+      else if(f.type==='month' && (now.getMonth()+1)===f.month && items.length<3) {
+        // solo se muestra si no hay ya algo más específico ese día
+      }
+    }
+
+    const efem = EFEMERIDES.find(e=>e.date===todayMd);
+    if(efem) items.push(efem.label);
+
+    // nota astronómica: cerca de solsticio o equinoccio, usando la declinación real
+    const decDeg = sun.dec/RAD;
+    if(Math.abs(decDeg) > 23.2) items.push(decDeg>0 ? 'Cerca del solsticio de verano' : 'Cerca del solsticio de invierno');
+    else if(Math.abs(decDeg) < 0.3) items.push('Cerca del equinoccio');
+
+    const visitas = loadVisitas().filter(v=>{
+      if(v.repeatsYearly) return v.date.slice(5)===todayMd;
+      return v.date===todayYmd;
+    });
+    visitas.forEach(v=>items.unshift(v.title));
+
+    if(items.length===0){
+      // si nada puntual aplica, mostrar la fiesta de temporada del mes (si hay) o una frase ambiental
+      const temporada = FIESTAS_CALAMUCHITA.find(f=>f.type==='month' && (now.getMonth()+1)===f.month);
+      if(temporada) items.push('Temporada: '+temporada.label);
+      else {
+        const isNight = sun.altitude < -0.05;
+        const key = weather.category==='clear' ? (isNight?'clear_night':'clear_day') : weather.category;
+        const pool = AMBIENTE[key] || AMBIENTE.clear_day;
+        items.push(pool[Math.floor(Math.random()*pool.length)]);
+      }
+    }
+
+    document.getElementById('placardList').innerHTML =
+      items.slice(0,3).map(t=>`<div>${t}</div>`).join('');
+  }
+
+  /* =====================================================
+     PANEL "VISITA ESPECIAL"
+     ===================================================== */
+  const addPanel = document.getElementById('addPanel');
+  document.getElementById('addBtn').addEventListener('click', ()=>{
+    renderVisitasList();
+    addPanel.hidden = false;
+  });
+  document.getElementById('cancelAdd').addEventListener('click', ()=> addPanel.hidden = true);
+  document.getElementById('saveAdd').addEventListener('click', ()=>{
+    const title = document.getElementById('addTitle').value.trim();
+    const date = document.getElementById('addDate').value;
+    const repeat = document.getElementById('addRepeat').checked;
+    if(!title || !date) return;
+    const list = loadVisitas();
+    list.push({id:Date.now(), title, date, repeatsYearly:repeat});
+    saveVisitas(list);
+    document.getElementById('addTitle').value='';
+    document.getElementById('addDate').value='';
+    document.getElementById('addRepeat').checked=false;
+    renderVisitasList();
+  });
+  function renderVisitasList(){
+    const list = loadVisitas();
+    document.getElementById('visitasList').innerHTML = list.map(v=>
+      `<div class="visita-item"><span>${v.title} · ${v.date}${v.repeatsYearly?' ↻':''}</span><button data-id="${v.id}">×</button></div>`
+    ).join('');
+    document.querySelectorAll('#visitasList button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id = Number(b.dataset.id);
+        saveVisitas(loadVisitas().filter(v=>v.id!==id));
+        renderVisitasList();
+      });
+    });
+  }
+
+  /* =====================================================
+     LOOP PRINCIPAL
+     ===================================================== */
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+  function tick(){
+    const now = new Date();
+    const sun = sunState(now);
+    const moon = moonState(now, sun);
+    const altDeg = sun.altitude/RAD;
+    const dayBrightness = paintSky(altDeg);
+    placeCelestial(sun, moon, dayBrightness);
+    starsEl.style.opacity = String(1-dayBrightness);
+
+    document.getElementById('hudDate').textContent = `${DIAS[now.getDay()]} ${now.getDate()} de ${MESES[now.getMonth()]}`;
+    document.getElementById('hudTime').textContent = now.toLocaleTimeString('es-AR');
+    document.getElementById('hudMoon').textContent = `${moon.emoji} ${moon.name} · ${Math.round(moon.illumination*100)}%`;
+    document.getElementById('hudSun').textContent = `sol ${altDeg>0?'+':''}${altDeg.toFixed(1)}°`;
+
+    buildPlacard(now, sun);
+  }
+
+  fetchWeather();
+  setInterval(fetchWeather, 10*60*1000);
+  tick();
+  setInterval(tick, 1000);
+  tickFX();
+})();
+</script>
+</body>
+</html>
